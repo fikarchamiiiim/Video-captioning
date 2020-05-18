@@ -14,12 +14,16 @@ import subprocess
 import glob
 import shutil
 
+from googletrans import Translator
+
 # TkInter
 from tkinter import *
 import tkinter.messagebox as mb
 import tkinter.filedialog as fd
 
 gui = Tk()
+
+translator = Translator()
 
 def browsefunc():
     ent1.configure(textvariable=StringVar(gui, value=""))
@@ -32,7 +36,7 @@ def playVid():
     startfile(video_path)
 
 def extract_image_feats(video_path):
-    print('Mengekstrak fitur dari images...')
+    hasilPred.configure(text="Membuat Prediksi....")
     model = resnet152(pretrained='imagenet')
     model = model.cuda()
     model.last_linear = utils.Identity()
@@ -64,8 +68,7 @@ def extract_image_feats(video_path):
     return image_feats
 
 
-def main(opt):
-    hasilPred.configure(text="Membuat Prediksi....")
+def main(opt):    
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     video_path = ent1.get().replace("/","\\")
     image_feats = extract_image_feats(video_path)
@@ -87,8 +90,11 @@ def main(opt):
         _, seq_preds = model(image_feats.cuda(), mode='inference', opt=opt)
     vocab = json.load(open('data/info.json'))['ix_to_word']
     sent = NLUtils.decode_sequence(vocab, seq_preds)
-    print(sent)
-    hasilPred.configure(text=sent[0])
+    hasil = translator.translate(sent[0],dest='id')
+    print(sent[0])
+    hasilPred.configure(text=hasil.text)
+    del seq_preds
+    torch.cuda.empty_cache()
 
 # GUI
 
@@ -119,10 +125,15 @@ btnPlay = Button(gui, text='Mainkan', font=40, command=playVid)
 btnPlay.pack()
 btnPlay.place(bordermode=INSIDE, y=150, x=150)
 
+# Label Prediksi
+labelPred = Label(gui, text='Hasil Prediksi : ', font=40)
+labelPred.pack()
+labelPred.place(bordermode=INSIDE, y=200, x=50)
+
 # Label Hasil
-hasilPred = Label(gui, text='...', font=40)
+hasilPred = Label(gui, text='Ini adalah hasil prediksi', font=30)
 hasilPred.pack()
-hasilPred.place(bordermode=INSIDE, y=200, x=50)
+hasilPred.place(bordermode=INSIDE, y=230, x=50)
 
 # credit
 credit = Label(gui, text='by Zulfikar Chamim', font=16)
