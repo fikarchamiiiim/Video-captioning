@@ -23,18 +23,27 @@ import tkinter.filedialog as fd
 
 gui = Tk()
 
+# Extend Google Translator Class
 translator = Translator()
 
+""" browsefunc()
+    untuk mengambil path video yang akan di prediksi """
 def browsefunc():
     ent1.configure(textvariable=StringVar(gui, value=""))
     filename =fd.askopenfilename(filetypes=(("All files","*.*"),("MP4 Files","*.mp4"),("mkv Files","*.mkv")))
     ent1.insert(END, filename) # add this
 
+""" playVid()
+    Function untuk memulai (play) file yang sudah dipilih"""
 def playVid():
     from os import startfile
     video_path = ent1.get().replace("/","\\")
     startfile(video_path)
 
+""" extract_image_feats(video_path)
+    Fungsi untuk meng ekstrak fitru frame dari video
+    
+    - video_path | string | -> variable yang berisi path video yang akan diprediksi  """
 def extract_image_feats(video_path):
     hasilPred.configure(text="Membuat Prediksi....")
     model = resnet152(pretrained='imagenet')
@@ -92,7 +101,8 @@ def main(opt):
     sent = NLUtils.decode_sequence(vocab, seq_preds)
     hasil = translator.translate(sent[0],dest='id')
     print(sent[0])
-    hasilPred.configure(text=hasil.text)
+    hasilPred.configure(text=sent[0])
+    hasiltrans.configure(text=hasil.text)
     del seq_preds
     torch.cuda.empty_cache()
 
@@ -131,9 +141,19 @@ labelPred.pack()
 labelPred.place(bordermode=INSIDE, y=200, x=50)
 
 # Label Hasil
-hasilPred = Label(gui, text='Ini adalah hasil prediksi', font=30)
+hasilPred = Label(gui, text='ini adalah hasil nya....', font=30)
 hasilPred.pack()
 hasilPred.place(bordermode=INSIDE, y=230, x=50)
+
+# Label Prediksi(translate)
+labelTrans = Label(gui, text='Translate : ', font=40)
+labelTrans.pack()
+labelTrans.place(bordermode=INSIDE, y=260, x=50)
+
+# Label Hasil (translate)
+hasiltrans = Label(gui, text='ini adalah hasil nya....', font=30)
+hasiltrans.pack()
+hasiltrans.place(bordermode=INSIDE, y=290, x=50)
 
 # credit
 credit = Label(gui, text='by Zulfikar Chamim', font=16)
