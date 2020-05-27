@@ -121,3 +121,6 @@ venv.bak/
 *.rar
 *.jpg
 *.mp3
+
+# tester
+/tester
