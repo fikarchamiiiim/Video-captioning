@@ -2,24 +2,28 @@ import json
 import os
 import argparse
 import torch
-from torch import nn
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
-from pretrainedmodels import resnet152
 import pretrainedmodels.utils as utils
 import NLUtils
 import numpy as np
 import subprocess
 import glob
 import shutil
-
+from torch import nn
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
+from pretrainedmodels import resnet152
 from googletrans import Translator
 
 # TkInter
 from tkinter import *
-import tkinter.messagebox as mb
 import tkinter.filedialog as fd
+
+# gTTS (Text to Speech)
+from gtts import gTTS
+import pyglet
+from time import sleep
+
 
 gui = Tk()
 
@@ -39,6 +43,21 @@ def playVid():
     from os import startfile
     video_path = ent1.get().replace("/","\\")
     startfile(video_path)
+
+def textToSpeech(text):
+    textObj = gTTS(text=text, lang='en', slow=False)
+    currentDirectory = os.getcwd()
+    dir_temp = "tempGTTS"
+    path = os.path.join(currentDirectory,dir_temp)
+    try:
+        textObj.save(f"{path}/welcome.mp3")
+    except OSError as e:
+        os.mkdir(path)
+        textObj.save(f"{path}/welcome.mp3")
+    
+    filename = f"{path}/welcome.mp3"
+    tts = pyglet.media.load(filename, streaming=False)
+    tts.play()
 
 """ extract_image_feats(video_path)
     Fungsi untuk meng ekstrak fitru frame dari video
@@ -89,7 +108,7 @@ def main(opt):
                             input_dropout_p=opt["input_dropout_p"],
                             rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=bool(opt["bidirectional"]))
     model = S2VTAttModel(encoder, decoder).cuda()
-    model.load_state_dict(torch.load("data/save/model_500.pth"))
+    model.load_state_dict(torch.load("data/save/model_800.pth"))
     model.eval()
     opt = dict()
     opt['child_sum'] = True
@@ -103,8 +122,14 @@ def main(opt):
     print(sent[0])
     hasilPred.configure(text=sent[0])
     hasiltrans.configure(text=hasil.text)
+    # textToSpeech(sent[0])
     del seq_preds
     torch.cuda.empty_cache()
+
+
+
+
+
 
 # GUI
 
@@ -154,6 +179,11 @@ labelTrans.place(bordermode=INSIDE, y=260, x=50)
 hasiltrans = Label(gui, text='ini adalah hasil nya....', font=30)
 hasiltrans.pack()
 hasiltrans.place(bordermode=INSIDE, y=290, x=50)
+
+# play TTS
+btnTts = Button(gui, text ="Play TTS", font=40)
+btnTts.pack()
+btnTts.place(bordermode=INSIDE, y=340, x=50)
 
 # credit
 credit = Label(gui, text='by Zulfikar Chamim', font=16)
