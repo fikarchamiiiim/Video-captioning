@@ -56,8 +56,6 @@ def textToSpeech(text):
         textObj.save(f"{path}/welcome.mp3")
     
     filename = f"{path}/welcome.mp3"
-    tts = pyglet.media.load(filename, streaming=False)
-    tts.play()
 
 """ extract_image_feats(video_path)
     Fungsi untuk meng ekstrak fitru frame dari video
@@ -125,11 +123,6 @@ def main(opt):
     # textToSpeech(sent[0])
     del seq_preds
     torch.cuda.empty_cache()
-
-
-
-
-
 
 # GUI
 

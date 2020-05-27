@@ -17,6 +17,7 @@ from googletrans import Translator
 
 # TkInter
 import tkinter as tk
+import tkinter.font as font
 import tkinter.filedialog as fd
 
 # gTTS (Text to Speech)
@@ -25,12 +26,16 @@ from time import sleep
 from playsound import playsound
 
 class MainApplication(tk.Frame):
+    # Constructor
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
 
-        # GUI
+        # path untuk file opt_info.json
         self.opt = json.load(open("data/save/opt_info.json"))
+
+        # Font Properties
+        font_properties = font.Font(size=10)
 
         # Label Judul
         self.judul = tk.Label(self.parent, text='Video Captioning',font=("Arial",30))
@@ -48,55 +53,69 @@ class MainApplication(tk.Frame):
         self.b1.place(bordermode=tk.INSIDE, y=100, x=250)
 
         # Button Prediksi
-        self.btnPrediksi = tk.Button(self.parent, text ="Prediksi", font=40,command=lambda : self.main(self.opt))
+        self.btnPrediksi = tk.Button(self.parent, text ="Prediksi", font=40,command=lambda : self.main(self.opt), state=tk.DISABLED)
+        self.btnPrediksi['font'] = font_properties
         self.btnPrediksi.pack()
         self.btnPrediksi.place(bordermode=tk.INSIDE, y=150, x=50)
 
         # Button Play
-        self.btnPlay = tk.Button(self.parent, text='Mainkan', font=40, command=self.playVid)
+        self.btnPlay = tk.Button(self.parent, text='Mainkan', font=40, command=self.playVid, state=tk.DISABLED)
+        self.btnPlay['font'] = font_properties
         self.btnPlay.pack()
         self.btnPlay.place(bordermode=tk.INSIDE, y=150, x=150)
 
         # Label Prediksi
-        self.labelPred = tk.Label(self.parent, text='Hasil Prediksi : ', font=40)
+        self.labelPred = tk.Label(self.parent, text='Hasil Prediksi : ')
+        self.labelPred['font'] = font_properties
         self.labelPred.pack()
         self.labelPred.place(bordermode=tk.INSIDE, y=200, x=50)
 
         # Label Hasil
         self.hasilPred = tk.Label(self.parent, text='ini adalah hasil nya....', font=30)
+        self.hasilPred['font'] = font_properties
         self.hasilPred.pack()
         self.hasilPred.place(bordermode=tk.INSIDE, y=230, x=50)
 
+        # play Text To
+        self.btnTts = tk.Button(self.parent, text ="EN", command=lambda : self.playSpeech("en"))
+        self.btnTts['font'] = font_properties
+        self.btnTts.pack()
+        self.btnTts.place(bordermode=tk.INSIDE, y=260, x=50)
+
         # Label Prediksi(translate)
         self.labelTrans = tk.Label(self.parent, text='Translate : ', font=40)
+        self.labelTrans['font'] = font_properties
         self.labelTrans.pack()
-        self.labelTrans.place(bordermode=tk.INSIDE, y=260, x=50)
+        self.labelTrans.place(bordermode=tk.INSIDE, y=290, x=50)
 
         # Label Hasil (translate)
         self.hasiltrans = tk.Label(self.parent, text='ini adalah hasil nya....', font=30)
+        self.hasiltrans['font'] = font_properties
         self.hasiltrans.pack()
-        self.hasiltrans.place(bordermode=tk.INSIDE, y=290, x=50)
+        self.hasiltrans.place(bordermode=tk.INSIDE, y=320, x=50)
 
-        # play TTS
-        self.btnTts = tk.Button(self.parent, text ="TextToSpeech", font=40, command=self.playSpeech)
-        self.btnTts.pack()
-        self.btnTts.place(bordermode=tk.INSIDE, y=340, x=50)
+        # play Text To
+        self.btnTts_trans = tk.Button(self.parent, text ="ID", command=lambda : self.playSpeech("id"))
+        self.btnTts_trans['font'] = font_properties
+        self.btnTts_trans.pack()
+        self.btnTts_trans.place(bordermode=tk.INSIDE, y=350, x=50)
 
         # credit
         self.credit = tk.Label(self.parent, text='by Zulfikar Chamim', font=16)
         self.credit.pack()
         self.credit.place(relx=1, rely=1, anchor=tk.SE)
 
+        # window properties
         self.parent.wm_title("Video Captioning")
         self.parent.geometry("375x400")
     
         # Extend Google Translator Class
         self.translator = Translator()
+
+        # directory for gTTS
         self.currentDirectory = os.getcwd()
         self.dir_temp = "tempGTTS"
         self.path = os.path.join(self.currentDirectory,self.dir_temp)
-        
-
 
     """ browsefunc()
         untuk mengambil path video yang akan di prediksi """
@@ -104,6 +123,12 @@ class MainApplication(tk.Frame):
         self.ent1.configure(textvariable=tk.StringVar(gui, value=""))
         filename =fd.askopenfilename(filetypes=(("All files","*.*"),("MP4 Files","*.mp4"),("mkv Files","*.mkv")))
         self.ent1.insert(tk.END, filename) # add this
+        if(self.ent1.get() == ""):
+            self.btnPlay.config(state="disabled")
+            self.btnPrediksi.config(state="disabled")
+        else:
+            self.btnPlay.config(state="normal")
+            self.btnPrediksi.config(state="normal")
 
     """ playVid()
         Function untuk memulai (play) file yang sudah dipilih"""
@@ -112,21 +137,35 @@ class MainApplication(tk.Frame):
         video_path = self.ent1.get().replace("/","\\")
         startfile(video_path)
 
-    def textToSpeech(self,text):
-        textObj = gTTS(text=text, lang='en', slow=False)
-        file_path = "{}\\audio.mp3".format(self.path)
+    """ textToSpeech(text, text_trans)
+        Function untuk konversi teks menjadi suara menggunkan
+        library gTTS
+        - text | string | -> string yang akan dirubah menjadi suara (original)
+        - text_trans | string | -> string yang akan dirubah menjadi suara (translated) """
+    def textToSpeech(self,text,text_trans):
+        textObj_ori = gTTS(text=text, lang='en', slow=False)
+        textObj_trans = gTTS(text=text_trans, lang='id', slow=False)
+        file_ori = "{}\\ori.mp3".format(self.path)
+        file_trans = "{}\\trans.mp3".format(self.path)
         try:
-            textObj.save(file_path)
+            textObj_ori.save(file_ori)
+            textObj_trans.save(file_trans)
         except OSError as e:
-            os.mkdir(path)
-            textObj.save(file_path)
-    
-    def playSpeech(self):
-        playsound("{}\\audio.mp3".format(self.path))
+            os.mkdir(self.path)
+            textObj_ori.save(file_ori)
+            textObj_trans.save(file_trans)
+            
+    """ playSpeech(lang)
+        Function untuk memutar (play) suara hasil dari fungsi textToSpeech() 
+        - lang | string | -> Bahasa yang akan diputar (play) """
+    def playSpeech(self, lang):
+        if(lang == "en"):
+            playsound("{}\\ori.mp3".format(self.path))
+        elif(lang == "id"):
+            playsound("{}\\trans.mp3".format(self.path))
 
     """ extract_image_feats(video_path)
         Fungsi untuk meng ekstrak fitru frame dari video
-        
         - video_path | string | -> variable yang berisi path video yang akan diprediksi  """
     def extract_image_feats(self,video_path):
         self.hasilPred.configure(text="Membuat Prediksi....")
@@ -160,7 +199,6 @@ class MainApplication(tk.Frame):
 
         return image_feats
 
-
     def main(self, opt): 
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         video_path = self.ent1.get().replace("/","\\")
@@ -188,7 +226,7 @@ class MainApplication(tk.Frame):
         self.hasilPred.configure(text=self.sent[0])
         self.hasiltrans.configure(text=hasil.text)
         # coba = self.sent[0]
-        self.textToSpeech(self.sent[0])
+        self.textToSpeech(self.sent[0],hasil.text)
         del seq_preds
         torch.cuda.empty_cache()
     
