@@ -57,7 +57,7 @@ def extract_feats(params, model, load_image_fn):
         with torch.no_grad():
             fc_feats = model(images.cuda()).squeeze()
         img_feats = fc_feats.cpu().numpy()
-        # Save the inception features
+        # Save the resnet features
         outfile = os.path.join(dir_fc, video_id + '.npy')
         np.save(outfile, img_feats)
         # cleanup

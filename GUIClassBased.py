@@ -19,6 +19,7 @@ from googletrans import Translator
 import tkinter as tk
 import tkinter.font as font
 import tkinter.filedialog as fd
+from tkinter.ttk import *
 
 # gTTS (Text to Speech)
 from gtts import gTTS
@@ -77,7 +78,8 @@ class MainApplication(tk.Frame):
         self.hasilPred.place(bordermode=tk.INSIDE, y=230, x=50)
 
         # play Text To
-        self.btnTts = tk.Button(self.parent, text ="EN", command=lambda : self.playSpeech("en"))
+        self.icon = tk.PhotoImage(file = r"icon/play.png").subsample(14,14)
+        self.btnTts = tk.Button(self.parent, image=self.icon, command=lambda : self.playSpeech("en"))
         self.btnTts['font'] = font_properties
         self.btnTts.pack()
         self.btnTts.place(bordermode=tk.INSIDE, y=260, x=50)
@@ -95,7 +97,7 @@ class MainApplication(tk.Frame):
         self.hasiltrans.place(bordermode=tk.INSIDE, y=320, x=50)
 
         # play Text To
-        self.btnTts_trans = tk.Button(self.parent, text ="ID", command=lambda : self.playSpeech("id"))
+        self.btnTts_trans = tk.Button(self.parent, image=self.icon, command=lambda : self.playSpeech("id"))
         self.btnTts_trans['font'] = font_properties
         self.btnTts_trans.pack()
         self.btnTts_trans.place(bordermode=tk.INSIDE, y=350, x=50)
@@ -108,6 +110,7 @@ class MainApplication(tk.Frame):
         # window properties
         self.parent.wm_title("Video Captioning")
         self.parent.geometry("375x400")
+        self.parent.protocol("WM_DELETE_WINDOW", self.closeEsc)
     
         # Extend Google Translator Class
         self.translator = Translator()
@@ -184,7 +187,7 @@ class MainApplication(tk.Frame):
             command = 'ffmpeg -i ' + video_path + ' -vf scale=400:300 ' + '-qscale:v 2 '+ '{0}/%06d.jpg'.format(dst)
             subprocess.call(command, shell=True, stdout=ffmpeg_log, stderr=ffmpeg_log)
         list_image = sorted(glob.glob(os.path.join(dst, '*.jpg')))
-        samples = np.round(np.linspace(0, len(list_image) - 1, 80))
+        samples = np.round(np.linspace(0, len(list_image) - 1, 40))
         list_image = [list_image[int(sample)] for sample in samples]
         images = torch.zeros((len(list_image), C, H, W))
         for i in range(len(list_image)):
@@ -199,6 +202,13 @@ class MainApplication(tk.Frame):
 
         return image_feats
 
+    def closeEsc(self):
+        try:
+            shutil.rmtree(self.path)
+        except OSError as e:
+            print("oke")
+        self.parent.destroy()
+
     def main(self, opt): 
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         video_path = self.ent1.get().replace("/","\\")
@@ -211,7 +221,7 @@ class MainApplication(tk.Frame):
                                 input_dropout_p=opt["input_dropout_p"],
                                 rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=bool(opt["bidirectional"]))
         model = S2VTAttModel(encoder, decoder).cuda()
-        model.load_state_dict(torch.load("data/save/model_800.pth"))
+        model.load_state_dict(torch.load("data/save/model_500.pth"))
         model.eval()
         opt = dict()
         opt['child_sum'] = True
